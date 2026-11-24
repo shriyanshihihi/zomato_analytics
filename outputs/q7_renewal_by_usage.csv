@@ -1,0 +1,4 @@
+usage_band,terms,renewed,renewal_rate_pct
+1: 0-2 orders,20,9.0,45.0
+2: 3-5 orders,18,7.0,38.9
+3: 6+ orders (2+/month),82,53.0,64.6

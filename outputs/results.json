@@ -1,0 +1,43 @@
+{
+  "DISCLAIMER": "SYNTHETIC DEMO DATA - not real Zomato data, not the CV's real results",
+  "users": 4000,
+  "orders": 18777,
+  "gold_terms": 222,
+  "eligible_users_for_affinity": 1875,
+  "baseline_gold_conversion_30_90d_pct": 3.15,
+  "baseline_gold_members_G0": 111,
+  "baseline_new_gold_per_month_n0": 23.7,
+  "monthly_gold_lapse_rate_g": 0.1331,
+  "renewal_rate_pct": 57.5,
+  "assumptions": {
+    "capture": 0.2,
+    "uplift": 0.25,
+    "ramp_months": 3,
+    "horizon_months": 3
+  },
+  "top3_levers": [
+    {
+      "name": "Cuisine discovery (3+ cuisines)",
+      "type": "acquisition (activate)",
+      "gain_pct": 8.14
+    },
+    {
+      "name": "Fee burden (Rs150+ fees in 30d)",
+      "type": "acquisition (target)",
+      "gain_pct": 7.27
+    },
+    {
+      "name": "Early frequency (3+ orders in 30d)",
+      "type": "acquisition (activate)",
+      "gain_pct": 6.29
+    }
+  ],
+  "growth_pct_by_scenario": {
+    "Baseline (no levers)": 21.0,
+    "Conservative": 31.8,
+    "Base": 42.7,
+    "Optimistic": 53.5
+  },
+  "target_pct": 30.0,
+  "multiplier_on_lever_effects_needed_for_target": 0.42
+}

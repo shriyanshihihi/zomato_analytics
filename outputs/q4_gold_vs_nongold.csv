@@ -1,0 +1,3 @@
+status,orders,user_months,orders_per_user_month,aov,avg_delivery_fee,avg_discount
+Gold,1931,363,5.32,562.0,0.0,27.5
+Non-Gold,16846,5856,2.88,493.9,44.9,19.4

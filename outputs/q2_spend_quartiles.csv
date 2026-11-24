@@ -1,0 +1,5 @@
+spend_quartile,users,avg_orders,avg_spend,pct_of_total_spend,pct_ever_gold,fees_pct_of_spend
+1,734,1.1,408.0,3.2,0.0,12.2
+2,734,2.2,982.0,7.7,1.0,10.3
+3,734,4.9,2291.0,17.9,2.5,9.6
+4,733,17.3,9146.0,71.3,17.5,7.2

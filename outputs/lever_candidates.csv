@@ -1,0 +1,7 @@
+name,type,gain_pct,u,rho,z,lift
+Early frequency (3+ orders in 30d),acquisition (activate),6.294,0.161,0.0,6.03,1.81
+Fee burden (Rs150+ fees in 30d),acquisition (target),7.272,0.187,0.0,6.39,2.11
+Cuisine discovery (3+ cuisines),acquisition (activate),8.137,0.209,0.0,4.79,2.04
+Late-night ordering,acquisition (target),5.121,0.131,0.0,2.31,1.38
+Offer-driven (discount >= 10%),acquisition (target),2.479,0.064,0.0,1.04,1.26
+Gold renewal engagement (2+ orders/month),retention (renewal),0.907,0.0,0.034,,
