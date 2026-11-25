@@ -31,6 +31,9 @@ Python 3.9+, SQLite >= 3.25 (bundled with Python).
 | `outputs/` | Sample output: query results, charts, `results.json` |
 | `docs/architecture.png`, `docs/workflow.png` | Diagrams for the whiteboard |
 
+## Start here
+Read `docs/PROJECT_WALKTHROUGH.md` - it explains every step and the safe answers for each CV phrase.
+
 ## Pipeline in one paragraph
 Generate data -> load into SQLite -> run SQL (monthly spend, spend quartiles, Gold trend, Gold vs non-Gold,
 cohort activity, 30-day user features, renewal by usage) -> pandas builds the cohort retention matrix and

@@ -1,3 +1,11 @@
+-- ============================================================
+-- CV bullet 1: 'Gold subscription trends'
+-- QUESTION   : Each month: how many new Gold members, how many active, how many lapsed, what share of users is Gold?
+-- HOW        : A helper `months` table + correlated subqueries; active = term covers the month end.
+-- READ IT AS : These numbers (last month active, avg new, lapse rate) become the STARTING POINT of the simulation.
+-- SAY IN INTERVIEW: 'Active at month end means start_date <= month_end AND end_date >= month_end.'
+-- (all data is SYNTHETIC demo data)
+-- ============================================================
 -- Q3 Gold subscription trend per month (uses the helper `months` table).
 -- new_gold   = first-term subscriptions starting in the month (new + returning members)
 -- active_gold= members whose term covers the month end

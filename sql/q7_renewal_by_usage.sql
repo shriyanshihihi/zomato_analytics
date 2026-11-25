@@ -1,3 +1,11 @@
+-- ============================================================
+-- CV bullet 2: retention lever for Gold renewal
+-- QUESTION   : Do members who order more during their term renew more often?
+-- HOW        : LEFT JOIN orders inside each term's date range, bucket usage, average the renewed flag.
+-- READ IT AS : Shows renewal rises with usage -> lever: keep members ordering 2+ times a month.
+-- SAY IN INTERVIEW: 'I excluded terms with unknown outcome (renewed_next IS NULL) so the future is not counted as churn.'
+-- (all data is SYNTHETIC demo data)
+-- ============================================================
 -- Q7 Gold renewal rate by how much the member ordered during the term (only decided terms).
 WITH term_usage AS (
   SELECT s.sub_id, s.renewed_next, COUNT(o.order_id) AS term_orders

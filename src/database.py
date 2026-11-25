@@ -1,4 +1,11 @@
-"""SQLite layer: load DataFrames as relational tables and run the .sql files in /sql."""
+"""SQLite layer.  CV link: the word 'relational' in bullet 1.
+
+WHAT: puts the three DataFrames into a real SQL database (tables linked by user_id) and runs the
+      .sql files in /sql, returning each result as a DataFrame.
+WHY : so the "SQL aggregation queries" claim is real SQL run by a real SQL engine, not pandas
+      pretending to be SQL.  SQLite is used because it needs no installation.
+SAY : "users 1-to-many orders, users 1-to-many subscription terms, joined on user_id."
+"""
 import sqlite3
 from pathlib import Path
 

@@ -1,3 +1,11 @@
+-- ============================================================
+-- CV bullet 2: 'cohort analysis'
+-- QUESTION   : Of users who started in month X, how many still order N months later?
+-- HOW        : CTEs: first order month = cohort; distinct active months; month_offset arithmetic; GROUP BY cohort, offset.
+-- READ IT AS : pandas divides active_users by cohort_size to make the retention matrix (heatmap).
+-- SAY IN INTERVIEW: 'Cohort = month of first order, so month 0 is 100% by definition.'
+-- (all data is SYNTHETIC demo data)
+-- ============================================================
 -- Q5 Cohort table. Cohort = month of a user's FIRST ORDER. month_offset = months since that month.
 -- Output is "long" (cohort, month_offset, active_users); pandas pivots it into the retention matrix.
 WITH first_order AS (

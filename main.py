@@ -1,5 +1,6 @@
 """Entry point.  python main.py            (about 10 seconds)
 
+Read docs/PROJECT_WALKTHROUGH.md first - it explains every step in plain English.
 Pipeline: synthetic data -> SQLite -> SQL queries -> cohort/affinity -> levers -> simulation -> outputs.
 ALL NUMBERS PRODUCED ARE FROM SYNTHETIC DEMO DATA. They are not real results and not the CV's results.
 """
@@ -28,7 +29,7 @@ SCENARIOS = {"Conservative": 0.5, "Base": 1.0, "Optimistic": 1.5}
 def main(n_users, seed, outdir, capture, uplift):
     out = Path(outdir); out.mkdir(parents=True, exist_ok=True)
     (ROOT / "data").mkdir(exist_ok=True)
-    print(f"[1/7] Generating SYNTHETIC data: {n_users} users, seed={seed}")
+    print(f"[1/7] Generating SYNTHETIC data: {n_users} users, seed={seed}  (stand-in for real tables: users, orders, subscriptions)")
     users, orders, subs = generate(n_users, seed)
     for name, df in (("users", users), ("orders", orders), ("subscriptions", subs)):
         df.to_csv(ROOT / "data" / f"{name}.csv", index=False)
@@ -36,7 +37,7 @@ def main(n_users, seed, outdir, capture, uplift):
     print("[2/7] Loading into SQLite")
     con = build_db(users, orders, subs, str(out / "demo.db"))
 
-    print("[3/7] Running SQL aggregation queries")
+    print("[3/7] Running SQL aggregation queries  <- CV bullet 1: expenditure patterns + Gold trends")
     q1, q2 = run_sql(con, "q1_monthly_expenditure.sql"), run_sql(con, "q2_spend_quartiles.sql")
     q3, q4 = run_sql(con, "q3_gold_trend.sql"), run_sql(con, "q4_gold_vs_nongold.sql")
     q5, q6 = run_sql(con, "q5_cohort_activity.sql"), run_sql(con, "q6_user_features.sql")
@@ -46,14 +47,14 @@ def main(n_users, seed, outdir, capture, uplift):
                  ("q7_renewal_by_usage", q7)):
         d.to_csv(out / f"{n}.csv", index=False)
 
-    print("[4/7] Cohort + affinity analysis")
+    print("[4/7] Cohort + affinity analysis  <- CV bullet 2: cohort & affinity analysis")
     ret, sizes = retention_matrix(q5)
     ret.to_csv(out / "cohort_retention_matrix.csv")
     aff, base_rate, n_elig, base_conv = behaviour_affinity(q6)
     cuisines = cuisine_affinity(orders)
     cuisines.head(15).to_csv(out / "cuisine_affinity_top15.csv", index=False)
 
-    print("[5/7] Ranking levers")
+    print("[5/7] Ranking levers  <- CV bullet 2: '3 actionable retention levers' (top 3 by simulated gain)")
     imp = lever_conversion_impact(aff, base_conv, capture, uplift)
     ren = renewal_lever(q7.set_index("usage_band"), capture)
 
@@ -79,7 +80,7 @@ def main(n_users, seed, outdir, capture, uplift):
     top3 = ok.head(3)
     cand.round(3).to_csv(out / "lever_candidates.csv", index=False)
 
-    print("[6/7] Simulating roadmap (3 months)")
+    print("[6/7] Simulating roadmap (3 months)  <- CV bullet 2: 'simulate roadmap for 30% Gold growth' (a TARGET, not a result)")
     u_sum, rho = float(top3.u.sum()), float(top3.rho.sum())
     paths = {"Baseline (no levers)": project(G0, n0, g, horizon=HORIZON)}
     results = {"Baseline (no levers)": round(base_growth, 1)}

@@ -1,5 +1,12 @@
 """Roadmap simulation for Gold subscriber growth.
 
+CV link: "simulate roadmap for 30% Gold subscriber growth".
+PLAIN ENGLISH: start with today's Gold members. Each month some lapse and some new ones join.
+Levers add extra joiners (or cut lapses) gradually. Run it forward and see the growth %.
+The 30% is a TARGET we test against, not an achieved result. required_multiplier() answers
+"how strong must the levers be to hit it?"
+
+
 Model (monthly steps, t = 1..H):
     G[t] = G[t-1] * (1 - g_eff[t]) + n0 * (1 + ramp[t] * k * sum(u_i))
     g_eff[t] = g * (1 - ramp[t] * k * rho)

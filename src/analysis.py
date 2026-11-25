@@ -1,4 +1,14 @@
-"""Cohort analysis, affinity analysis and retention-lever identification (pandas)."""
+"""Cohort analysis, affinity analysis and retention-lever identification (pandas).
+
+CV link: bullet 2 - "Identified 3 actionable retention levers via cohort & affinity analysis".
+Reading order:
+  retention_matrix()          -> COHORT analysis (when do users drop off?)
+  cuisine_affinity()          -> AFFINITY (support / confidence / lift between cuisines)
+  behaviour_affinity()        -> AFFINITY of early behaviours with joining Gold (lift + z-test)
+  lever_conversion_impact()   -> turns each behaviour into a candidate LEVER with an estimated effect
+  renewal_lever()             -> the retention lever for Gold renewal
+HONEST NOTE: lift = association, not cause; capture/uplift are ASSUMPTIONS (command-line options).
+"""
 import math
 
 import numpy as np

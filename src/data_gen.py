@@ -1,5 +1,18 @@
 """Synthetic data generator.
 
+WHAT / WHY (read this first)
+  The real data is not available, so this file INVENTS a small food-delivery dataset so every
+  other file can run. It is the "raw tables" box of the architecture. Nothing here is a CV claim;
+  it only makes the claims demonstrable.
+  How a user is simulated, month by month (Jan-Sep 2025):
+    1. pick a segment (casual / regular / power) -> how many orders per month they place
+    2. place orders (cuisine, time of day, value, delivery fee, discount)
+    3. decide whether they stay active (more orders -> more likely to stay)
+    4. decide whether they buy Gold (more orders, fee-sensitive, explorer -> more likely)
+    5. Gold members order more, pay no delivery fee, and renew more if they use it
+  Because these rules are written by us, the analysis later "finds" them. That proves the
+  PIPELINE works; it does NOT prove anything about real customers.
+
 !!! ALL DATA PRODUCED HERE IS SYNTHETIC DEMO DATA. It is NOT real Zomato data. !!!
 It exists only so the SQL / cohort / affinity / simulation pipeline can run end to end.
 Behavioural effects (e.g. frequent orderers convert to Gold more often) are built into

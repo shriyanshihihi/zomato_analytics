@@ -1,3 +1,11 @@
+-- ============================================================
+-- CV bullet 1: 'SQL aggregation queries ... expenditure patterns'
+-- QUESTION   : How much did customers spend each month, and how often did they order?
+-- HOW        : Collapses ~19k order rows into 9 monthly rows (GROUP BY month) with COUNT, COUNT(DISTINCT), SUM, AVG.
+-- READ IT AS : Look at: gmv, aov, orders_per_active_user. Rising orders_per_active_user = habit forming.
+-- SAY IN INTERVIEW: 'I used GROUP BY month with COUNT DISTINCT users so active users are not double counted.'
+-- (all data is SYNTHETIC demo data)
+-- ============================================================
 -- Q1 Expenditure pattern over time (monthly). SYNTHETIC DATA.
 -- Aggregation: COUNT / COUNT DISTINCT / SUM / AVG with GROUP BY month.
 SELECT strftime('%Y-%m', order_date)                         AS month,

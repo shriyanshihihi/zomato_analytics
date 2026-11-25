@@ -1,3 +1,11 @@
+-- ============================================================
+-- CV bullet 2: 'affinity analysis' (and the 3 levers)
+-- QUESTION   : Which early behaviours go together with joining Gold later?
+-- HOW        : One row per user: behaviour in first 30 days (features) vs Gold joined in days 30-90 (outcome).
+-- READ IT AS : The time split prevents leakage: Gold members pay 0 fees, so using later fees would fake a signal.
+-- SAY IN INTERVIEW: 'Features come before the outcome in time, so Gold cannot have caused the behaviour I measure.'
+-- (all data is SYNTHETIC demo data)
+-- ============================================================
 -- Q6 One row per user: behaviour in the FIRST 30 DAYS (features) and whether they joined Gold in
 -- days 30-90 (outcome). Features and outcome are separated in time on purpose, to avoid leakage /
 -- reverse causality (e.g. Gold members pay 0 delivery fee, which would fake a "low fee" signal).

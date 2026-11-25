@@ -1,3 +1,11 @@
+-- ============================================================
+-- CV bullet 1: 'expenditure patterns' (who spends)
+-- QUESTION   : Is spend evenly spread, or do a few customers give most of it? Are big spenders more often Gold?
+-- HOW        : JOIN users->orders, LEFT JOIN a DISTINCT Gold list, NTILE(4) window function to rank users into 4 spend tiers.
+-- READ IT AS : Look at: pct_of_total_spend (top tier gives most), pct_ever_gold (rises with spend), fees_pct_of_spend.
+-- SAY IN INTERVIEW: 'Spend is skewed, so I segmented into quartiles instead of trusting the average.'
+-- (all data is SYNTHETIC demo data)
+-- ============================================================
 -- Q2 Expenditure patterns by customer: split users into 4 spend quartiles (window function NTILE).
 -- Joins: users -> orders (1:many), LEFT JOIN to a DISTINCT list of Gold users (avoids row multiplication).
 WITH ever_gold AS (SELECT DISTINCT user_id FROM subscriptions),
