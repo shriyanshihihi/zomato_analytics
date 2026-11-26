@@ -1,0 +1,6 @@
+behaviour,kind,n_with,n_without,rate_with,rate_without,base_rate,lift,z
+Cuisine discovery (3+ cuisines),activate,482,1393,0.0643,0.0201,0.0315,2.0439,4.7927
+Early frequency (3+ orders in 30d),activate,897,978,0.0569,0.0082,0.0315,1.8069,6.0311
+Fee burden (Rs150+ fees in 30d),target,664,1211,0.0663,0.0124,0.0315,2.1059,6.3913
+Late-night ordering,target,716,1159,0.0433,0.0242,0.0315,1.3759,2.3062
+Offer-driven (discount >= 10%),target,377,1498,0.0398,0.0294,0.0315,1.2644,1.0354

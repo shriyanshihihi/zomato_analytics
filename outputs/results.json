@@ -3,12 +3,9 @@
   "users": 4000,
   "orders": 18777,
   "gold_terms": 222,
-  "eligible_users_for_affinity": 1875,
-  "baseline_gold_conversion_30_90d_pct": 3.15,
   "baseline_gold_members_G0": 111,
   "baseline_new_gold_per_month_n0": 23.7,
   "monthly_gold_lapse_rate_g": 0.1331,
-  "renewal_rate_pct": 57.5,
   "assumptions": {
     "capture": 0.2,
     "uplift": 0.25,

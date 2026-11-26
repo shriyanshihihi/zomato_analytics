@@ -1,7 +1,8 @@
 """Entry point.  python main.py            (about 10 seconds)
 
 Read docs/PROJECT_WALKTHROUGH.md first - it explains every step in plain English.
-Pipeline: synthetic data -> SQLite -> SQL queries -> cohort/affinity -> levers -> simulation -> outputs.
+Pipeline: synthetic data -> SQLite -> SQL queries -> cohort/affinity (SQL) -> levers (SQL) -> simulation (SQL) -> outputs.
+Python only loads data, runs the .sql files in /sql and draws charts. The analysis itself is SQL (matches the CV: SQL, Cohort Analysis).
 ALL NUMBERS PRODUCED ARE FROM SYNTHETIC DEMO DATA. They are not real results and not the CV's results.
 """
 import argparse
@@ -14,15 +15,14 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from analysis import (behaviour_affinity, cuisine_affinity, lever_conversion_impact,  # noqa: E402
-                      renewal_lever, retention_matrix)
+from analysis import retention_matrix  # noqa: E402  (display helper only)
 from data_gen import generate  # noqa: E402
-from database import build_db, run_sql  # noqa: E402
-from simulate import growth_pct, project, required_multiplier  # noqa: E402
+from database import build_db, exec_sql, run_sql, table  # noqa: E402
 import viz  # noqa: E402
 
 TARGET = 30.0
 HORIZON = 3  # months in the roadmap (one quarter)
+RAMP = 3     # months over which lever effects phase in
 SCENARIOS = {"Conservative": 0.5, "Base": 1.0, "Optimistic": 1.5}
 
 
@@ -34,80 +34,63 @@ def main(n_users, seed, outdir, capture, uplift):
     for name, df in (("users", users), ("orders", orders), ("subscriptions", subs)):
         df.to_csv(ROOT / "data" / f"{name}.csv", index=False)
 
-    print("[2/7] Loading into SQLite")
+    print("[2/7] Loading into SQLite (relational tables)")
     con = build_db(users, orders, subs, str(out / "demo.db"))
 
-    print("[3/7] Running SQL aggregation queries  <- CV bullet 1: expenditure patterns + Gold trends")
+    print("[3/7] SQL aggregation queries  <- CV bullet 1: expenditure patterns + Gold trends")
     q1, q2 = run_sql(con, "q1_monthly_expenditure.sql"), run_sql(con, "q2_spend_quartiles.sql")
-    q3, q4 = run_sql(con, "q3_gold_trend.sql"), run_sql(con, "q4_gold_vs_nongold.sql")
-    q5, q6 = run_sql(con, "q5_cohort_activity.sql"), run_sql(con, "q6_user_features.sql")
-    q7 = run_sql(con, "q7_renewal_by_usage.sql")
+    q3, q4 = table(con, "gold_trend"), run_sql(con, "q4_gold_vs_nongold.sql")
+    q7 = table(con, "renewal_bands")
     for n, d in (("q1_monthly_expenditure", q1), ("q2_spend_quartiles", q2), ("q3_gold_trend", q3),
-                 ("q4_gold_vs_nongold", q4), ("q5_cohort_activity", q5), ("q6_user_features", q6),
-                 ("q7_renewal_by_usage", q7)):
+                 ("q4_gold_vs_nongold", q4), ("q7_renewal_by_usage", q7)):
         d.to_csv(out / f"{n}.csv", index=False)
 
-    print("[4/7] Cohort + affinity analysis  <- CV bullet 2: cohort & affinity analysis")
-    ret, sizes = retention_matrix(q5)
-    ret.to_csv(out / "cohort_retention_matrix.csv")
-    aff, base_rate, n_elig, base_conv = behaviour_affinity(q6)
-    cuisines = cuisine_affinity(orders)
-    cuisines.head(15).to_csv(out / "cuisine_affinity_top15.csv", index=False)
+    print("[4/7] Cohort + affinity analysis (all in SQL)  <- CV bullet 2")
+    q5 = run_sql(con, "q5_cohort_activity.sql"); q5.to_csv(out / "q5_cohort_activity.csv", index=False)
+    ret, _ = retention_matrix(q5); ret.to_csv(out / "cohort_retention_matrix.csv")
+    run_sql(con, "q8_cuisine_affinity.sql").to_csv(out / "cuisine_affinity_top15.csv", index=False)
+    exec_sql(con, "q9_behaviour_affinity.sql")
+    aff = table(con, "affinity").round(4); aff.to_csv(out / "behaviour_affinity.csv", index=False)
+    exec_sql(con, "q10_lever_impact.sql", dict(capture=capture, uplift=uplift))
 
-    print("[5/7] Ranking levers  <- CV bullet 2: '3 actionable retention levers' (top 3 by simulated gain)")
-    imp = lever_conversion_impact(aff, base_conv, capture, uplift)
-    ren = renewal_lever(q7.set_index("usage_band"), capture)
+    print("[5/7] Ranking levers in SQL  <- CV bullet 2: '3 actionable retention levers'")
+    base = run_sql(con, "q11_baseline_params.sql").iloc[0]
+    sim_p = dict(G0=float(base.G0), n0=float(base.n0), g=float(base.g), horizon=HORIZON, ramp=RAMP)
+    exec_sql(con, "q14_scenarios_standalone.sql")
+    con.execute("DROP TABLE IF EXISTS sim_result"); exec_sql(con, "q12_simulate.sql", sim_p)
+    con.execute("ALTER TABLE sim_result RENAME TO sim_standalone")
+    exec_sql(con, "q13_lever_ranking.sql", dict(horizon=HORIZON))
+    ranking = table(con, "lever_ranking").sort_values("gain_pct", ascending=False)
+    ranking.round(3).to_csv(out / "lever_candidates.csv", index=False)
+    top3 = ranking[ranking.is_top3 == 1]
 
-    # baseline parameters for the simulation, taken from SQL output (last 3 months)
-    last3 = q3.tail(3).reset_index(drop=True)
-    prev_active = q3.active_gold.shift(1).tail(3).reset_index(drop=True)
-    G0 = int(q3.active_gold.iloc[-1])
-    n0 = float(last3.new_gold.mean())
-    g = float(last3.lapsed.sum() / prev_active.sum())
-    base_growth = growth_pct(project(G0, n0, g, horizon=HORIZON))
-
-    cand = []
-    for _, r in imp.iterrows():
-        gain = growth_pct(project(G0, n0, g, u_sum=r.u_new_gold, horizon=HORIZON)) - base_growth
-        cand.append(dict(name=r.behaviour, type=f"acquisition ({r.kind})", gain_pct=gain, u=r.u_new_gold,
-                         rho=0.0, z=r.z, lift=r.lift))
-    gain_r = growth_pct(project(G0, n0, g, rho=ren["churn_reduction_rho"], horizon=HORIZON)) - base_growth
-    cand.append(dict(name="Gold renewal engagement (2+ orders/month)", type="retention (renewal)",
-                     gain_pct=gain_r, u=0.0, rho=ren["churn_reduction_rho"], z=None, lift=None))
-    cand = pd.DataFrame(cand)
-    # keep only statistically meaningful acquisition levers (|z| >= 2), then take top 3 by gain
-    ok = cand[(cand.z.isna()) | (cand.z >= 2)].sort_values("gain_pct", ascending=False)
-    top3 = ok.head(3)
-    cand.round(3).to_csv(out / "lever_candidates.csv", index=False)
-
-    print("[6/7] Simulating roadmap (3 months)  <- CV bullet 2: 'simulate roadmap for 30% Gold growth' (a TARGET, not a result)")
-    u_sum, rho = float(top3.u.sum()), float(top3.rho.sum())
-    paths = {"Baseline (no levers)": project(G0, n0, g, horizon=HORIZON)}
-    results = {"Baseline (no levers)": round(base_growth, 1)}
-    for name, k in SCENARIOS.items():
-        paths[name] = project(G0, n0, g, u_sum, rho, k, horizon=HORIZON)
-        results[name] = round(growth_pct(paths[name]), 1)
-    k_req = required_multiplier(G0, n0, g, u_sum, rho, TARGET, HORIZON)
+    print("[6/7] Simulating roadmap in SQL  <- CV bullet 2: 'simulate roadmap for 30% Gold growth' (a TARGET, not a result)")
+    con.execute("DROP TABLE scenarios"); exec_sql(con, "q15_scenarios_final.sql")
+    con.execute("DROP TABLE IF EXISTS sim_result"); exec_sql(con, "q12_simulate.sql", sim_p)
+    sim = table(con, "sim_result")
+    need = run_sql(con, "q16_required_multiplier.sql", dict(horizon=HORIZON, target=TARGET)).iloc[0, 0]
+    names = ["Baseline (no levers)", "Conservative", "Base", "Optimistic"]
+    paths = {n: sim[sim.scenario == n].sort_values("t").members.tolist() for n in names}
+    results = {n: round(float(sim[(sim.scenario == n) & (sim.t == HORIZON)].growth_pct.iloc[0]), 1) for n in names}
 
     print("[7/7] Writing charts + summary")
     viz.cohort_heatmap(ret, out / "chart_cohort_retention.png")
     viz.gold_trend(q3, out / "chart_gold_trend.png")
     viz.spend_quartiles(q2, out / "chart_spend_quartiles.png")
-    viz.lever_chart(cand, set(top3.name), out / "chart_levers.png")
-    viz.scenarios(paths, G0 * (1 + TARGET / 100), out / "chart_simulation.png")
+    viz.lever_chart(ranking, set(top3.name), out / "chart_levers.png")
+    viz.scenarios(paths, base.G0 * (1 + TARGET / 100), out / "chart_simulation.png")
     viz.architecture(ROOT / "docs" / "architecture.png")
     viz.workflow(ROOT / "docs" / "workflow.png")
 
     summary = dict(
         DISCLAIMER="SYNTHETIC DEMO DATA - not real Zomato data, not the CV's real results",
         users=n_users, orders=len(orders), gold_terms=len(subs),
-        eligible_users_for_affinity=n_elig, baseline_gold_conversion_30_90d_pct=round(100 * base_rate, 2),
-        baseline_gold_members_G0=G0, baseline_new_gold_per_month_n0=round(n0, 1),
-        monthly_gold_lapse_rate_g=round(g, 4), renewal_rate_pct=round(100 * ren["renewal_rate"], 1),
-        assumptions=dict(capture=capture, uplift=uplift, ramp_months=3, horizon_months=HORIZON),
+        baseline_gold_members_G0=int(base.G0), baseline_new_gold_per_month_n0=round(float(base.n0), 1),
+        monthly_gold_lapse_rate_g=round(float(base.g), 4),
+        assumptions=dict(capture=capture, uplift=uplift, ramp_months=RAMP, horizon_months=HORIZON),
         top3_levers=top3[["name", "type", "gain_pct"]].round(2).to_dict("records"),
         growth_pct_by_scenario=results, target_pct=TARGET,
-        multiplier_on_lever_effects_needed_for_target=k_req,
+        multiplier_on_lever_effects_needed_for_target=None if pd.isna(need) else float(need),
     )
     (out / "results.json").write_text(json.dumps(summary, indent=2, default=float))
     print("\n=== SUMMARY (synthetic data) ===")

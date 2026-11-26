@@ -1,16 +1,16 @@
 if_ordered,then_ordered,support,confidence,lift
 Beverages,Rolls,0.051,0.325,1.746
 Rolls,Beverages,0.051,0.274,1.746
-Healthy,Beverages,0.05,0.27,1.72
 Beverages,Healthy,0.05,0.319,1.72
-Healthy,Rolls,0.058,0.312,1.677
+Healthy,Beverages,0.05,0.27,1.72
+Healthy,Rolls,0.058,0.313,1.677
 Rolls,Healthy,0.058,0.311,1.677
-Rolls,Desserts,0.074,0.395,1.639
 Desserts,Rolls,0.074,0.306,1.639
+Rolls,Desserts,0.074,0.395,1.639
 Beverages,South Indian,0.066,0.421,1.634
 South Indian,Beverages,0.066,0.257,1.634
 Desserts,Healthy,0.072,0.3,1.618
 Healthy,Desserts,0.072,0.39,1.618
 Rolls,South Indian,0.074,0.397,1.54
 South Indian,Rolls,0.074,0.287,1.54
-Burgers,Beverages,0.062,0.241,1.537
+Beverages,Burgers,0.062,0.397,1.537
